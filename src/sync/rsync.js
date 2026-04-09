@@ -66,6 +66,21 @@ class RsyncTransfer {
       : this.project.localPath
   }
 
+  /**
+   * Build local and remote paths, detecting files vs directories.
+   * Directories get trailing slashes (rsync "contents of" semantics);
+   * files do not.
+   */
+  buildPaths (localSub, remoteSub) {
+    const localRaw = this.buildLocal(localSub)
+    const isFile = isFilePath(localRaw)
+    return {
+      local: isFile ? localRaw : ensureTrailingSlash(localRaw),
+      remote: isFile ? this.buildRemote(remoteSub) : ensureTrailingSlash(this.buildRemote(remoteSub)),
+      isFile
+    }
+  }
+
   buildExcludeArgs () {
     const excludeFile = this.project.excludeFile || DEFAULT_EXCLUDE_FILE
     if (fs.existsSync(excludeFile)) {
@@ -94,12 +109,10 @@ class RsyncTransfer {
     if (options.dryRun) args.push('--dry-run', '--itemize-changes')
     if (options.delete) args.push('--delete-after')
 
-    // Ensure trailing slash for directory sync
-    const remote = ensureTrailingSlash(this.buildRemote(remoteSub))
-    const local = ensureTrailingSlash(this.buildLocal(localSub))
+    const { local, remote, isFile } = this.buildPaths(localSub, remoteSub)
 
-    // Ensure local directory exists
-    fs.mkdirSync(local.replace(/\/$/, ''), { recursive: true })
+    // Ensure local parent directory (file) or target directory exists
+    fs.mkdirSync(isFile ? path.dirname(local) : local.replace(/\/$/, ''), { recursive: true })
 
     args.push(remote, local)
 
@@ -124,8 +137,7 @@ class RsyncTransfer {
     if (options.dryRun) args.push('--dry-run', '--itemize-changes')
     if (options.delete) args.push('--delete-after')
 
-    const local = ensureTrailingSlash(this.buildLocal(localSub))
-    const remote = ensureTrailingSlash(this.buildRemote(remoteSub))
+    const { local, remote } = this.buildPaths(localSub, remoteSub)
 
     args.push(local, remote)
 
@@ -154,8 +166,7 @@ class RsyncTransfer {
 
     if (options.delete) args.push('--delete-after')
 
-    const local = ensureTrailingSlash(this.buildLocal(localSub))
-    const remote = ensureTrailingSlash(this.buildRemote(remoteSub))
+    const { local, remote } = this.buildPaths(localSub, remoteSub)
 
     if (options.direction === 'pull') {
       args.push(remote, local)
@@ -250,6 +261,21 @@ function shellQuote (s) {
 
 function ensureTrailingSlash (p) {
   return p.endsWith('/') ? p : p + '/'
+}
+
+/**
+ * Check whether a local path points to a file (not a directory).
+ * Checks the filesystem first; falls back to checking if the basename
+ * contains a dot (e.g. "style.css") when the path doesn't exist yet.
+ */
+function isFilePath (localPath) {
+  const clean = localPath.replace(/\/$/, '')
+  try {
+    return fs.statSync(clean).isFile()
+  } catch {
+    // Path doesn't exist — use heuristic: files have extensions
+    return path.extname(path.basename(clean)) !== ''
+  }
 }
 
 /**
