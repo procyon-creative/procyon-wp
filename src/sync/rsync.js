@@ -265,16 +265,12 @@ function ensureTrailingSlash (p) {
 
 /**
  * Check whether a local path points to a file (not a directory).
- * Checks the filesystem first; falls back to checking if the basename
- * contains a dot (e.g. "style.css") when the path doesn't exist yet.
  */
 function isFilePath (localPath) {
-  const clean = localPath.replace(/\/$/, '')
   try {
-    return fs.statSync(clean).isFile()
+    return fs.statSync(localPath).isFile()
   } catch {
-    // Path doesn't exist — use heuristic: files have extensions
-    return path.extname(path.basename(clean)) !== ''
+    return false
   }
 }
 
