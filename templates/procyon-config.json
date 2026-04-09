@@ -1,0 +1,12 @@
+{
+  "projectName": "{{projectName}}",
+  "inventory": {
+    "environments": [
+      {
+        "name": "{{env}}",
+        "ssh": "{{ssh}}",
+        "path": "public"
+      }
+    ]
+  }
+}

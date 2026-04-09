@@ -1,0 +1,7 @@
+path: public
+'@live':
+  ssh: https://www.localhost:3000
+  path: public
+'@staging':
+  ssh: https://staging.localhost:3000
+  path: public
