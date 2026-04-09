@@ -71,7 +71,7 @@ Run `procyon init` to create `~/.procyon/projects/<name>.json` and a `.procyon` 
 
 ## Contributing
 
-This repo uses a fork-and-PR workflow. The upstream repo is `procyon-creative/procyon-wp`. Push changes to a branch on the `origin` fork (`nicolasgalvez/procyon-wp`) and open a pull request against `upstream/main`.
+This repo uses a fork-and-PR workflow. The upstream repo is `procyon-creative/procyon-wp`. Push changes to a branch on your `origin` fork and open a pull request against `upstream/main`.
 
 ## Code Principles
 
