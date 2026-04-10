@@ -4,7 +4,7 @@ A WordPress development toolkit that automates database syncing, file transfers,
 
 ## Installation
 ```
-npm install -g procyon-cli
+npm install -g @procyon-creative/procyon-wp
 ```
 
 Or check out the repo and run:

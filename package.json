@@ -1,7 +1,7 @@
 {
   "name": "@procyon-creative/procyon-wp",
-  "version": "1.0.1",
-  "description": "",
+  "version": "1.0.2",
+  "description": "WordPress development CLI for database syncing, file transfers, and environment management",
   "main": "index.js",
   "bin": {
     "procyon": "./index.js"
@@ -10,13 +10,25 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint 'commands/**/*.js' 'src/**/*.js' index.js --fix",
-    "prepare": "husky install"
+    "prepare": "husky install || true"
   },
   "author": "Procyon Creative Services",
   "license": "ISC",
   "repository": {
     "type": "git",
     "url": "https://github.com/procyon-creative/procyon-wp.git"
+  },
+  "keywords": [
+    "wordpress",
+    "cli",
+    "rsync",
+    "database",
+    "deployment",
+    "wp-cli",
+    "staging"
+  ],
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "csv-parser": "^3.0.0",
