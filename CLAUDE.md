@@ -69,6 +69,16 @@ Run `procyon init` to create `~/.procyon/projects/<name>.json` and a `.procyon` 
 - Lando detection: If `wpCli` is `"lando wp"` in project config
 - WP Engine detection: Commands check for "wpe-user" in paths for special export handling
 
+## Contributing
+
+This repo uses a fork-and-PR workflow. The upstream repo is `procyon-creative/procyon-wp`. Push changes to a branch on your `origin` fork and open a pull request against `upstream/main`.
+
+## Code Principles
+
+- **DRY (Don't Repeat Yourself):** Extract shared logic into helpers or methods rather than duplicating across call sites.
+- **SLAP (Single Level of Abstraction Principle):** Each function should operate at one level of abstraction. Don't mix high-level orchestration with low-level details in the same function.
+- **Red/Green TDD:** New features should be developed test-first — write a failing test (red), then implement just enough code to pass it (green), then refactor.
+
 ## Testing
 
 - vitest v4 (ESM-only imports, `createRequire` for CJS source)
