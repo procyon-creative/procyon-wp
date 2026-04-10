@@ -186,6 +186,50 @@ describe('parseItemizedChanges', () => {
   })
 })
 
+describe('buildPaths', () => {
+  it('adds trailing slashes for directories', () => {
+    const rsync = new RsyncTransfer(mockProject, mockEnv)
+    const { local, remote, isFile } = rsync.buildPaths('wp-content/themes', 'wp-content/themes')
+    expect(isFile).toBe(false)
+    expect(local).toBe('/Users/test/Sites/test-site/wp-content/themes/')
+    expect(remote).toBe('deploy@staging.example.com:/var/www/html/wp-content/themes/')
+  })
+
+  it('skips trailing slashes for files', () => {
+    const fs = require('fs')
+    const os = require('os')
+    const path = require('path')
+    const tmpFile = path.join(os.tmpdir(), 'procyon-test-file.php')
+    fs.writeFileSync(tmpFile, '<?php\n')
+    try {
+      const project = { ...mockProject, localPath: os.tmpdir() }
+      const rsync = new RsyncTransfer(project, mockEnv)
+      const { local, remote, isFile } = rsync.buildPaths('procyon-test-file.php', 'procyon-test-file.php')
+      expect(isFile).toBe(true)
+      expect(local).toBe(tmpFile)
+      expect(remote).toBe('deploy@staging.example.com:/var/www/html/procyon-test-file.php')
+    } finally {
+      fs.unlinkSync(tmpFile)
+    }
+  })
+
+  it('treats non-existent paths as directories', () => {
+    const rsync = new RsyncTransfer(mockProject, mockEnv)
+    const { local, remote, isFile } = rsync.buildPaths('does-not-exist.php', 'does-not-exist.php')
+    expect(isFile).toBe(false)
+    expect(local.endsWith('/')).toBe(true)
+    expect(remote.endsWith('/')).toBe(true)
+  })
+
+  it('respects options.isFile override', () => {
+    const rsync = new RsyncTransfer(mockProject, mockEnv)
+    const { local, remote, isFile } = rsync.buildPaths('remote-only.php', 'remote-only.php', { isFile: true })
+    expect(isFile).toBe(true)
+    expect(local.endsWith('/')).toBe(false)
+    expect(remote.endsWith('/')).toBe(false)
+  })
+})
+
 describe('shellQuote', () => {
   it('quotes a simple string', () => {
     expect(shellQuote('/var/www/html')).toBe("'/var/www/html'")

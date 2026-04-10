@@ -71,9 +71,9 @@ class RsyncTransfer {
    * Directories get trailing slashes (rsync "contents of" semantics);
    * files do not.
    */
-  buildPaths (localSub, remoteSub) {
+  buildPaths (localSub, remoteSub, options = {}) {
     const localRaw = this.buildLocal(localSub)
-    const isFile = isFilePath(localRaw)
+    const isFile = typeof options.isFile === 'boolean' ? options.isFile : isFilePath(localRaw)
     return {
       local: isFile ? localRaw : ensureTrailingSlash(localRaw),
       remote: isFile ? this.buildRemote(remoteSub) : ensureTrailingSlash(this.buildRemote(remoteSub)),
@@ -109,7 +109,7 @@ class RsyncTransfer {
     if (options.dryRun) args.push('--dry-run', '--itemize-changes')
     if (options.delete) args.push('--delete-after')
 
-    const { local, remote, isFile } = this.buildPaths(localSub, remoteSub)
+    const { local, remote, isFile } = this.buildPaths(localSub, remoteSub, options)
 
     // Ensure local parent directory (file) or target directory exists
     fs.mkdirSync(isFile ? path.dirname(local) : local.replace(/\/$/, ''), { recursive: true })
@@ -137,7 +137,7 @@ class RsyncTransfer {
     if (options.dryRun) args.push('--dry-run', '--itemize-changes')
     if (options.delete) args.push('--delete-after')
 
-    const { local, remote } = this.buildPaths(localSub, remoteSub)
+    const { local, remote } = this.buildPaths(localSub, remoteSub, options)
 
     args.push(local, remote)
 
@@ -166,7 +166,7 @@ class RsyncTransfer {
 
     if (options.delete) args.push('--delete-after')
 
-    const { local, remote } = this.buildPaths(localSub, remoteSub)
+    const { local, remote } = this.buildPaths(localSub, remoteSub, options)
 
     if (options.direction === 'pull') {
       args.push(remote, local)
@@ -269,8 +269,9 @@ function ensureTrailingSlash (p) {
 function isFilePath (localPath) {
   try {
     return fs.statSync(localPath).isFile()
-  } catch {
-    return false
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return false
+    throw error
   }
 }
 
