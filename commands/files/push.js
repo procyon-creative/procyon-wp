@@ -79,11 +79,13 @@ module.exports = {
     }
 
     for (const { subpath, label, useDelete } of subpaths) {
+      let changes = null
+
       // --dry-run: show parsed diff and stop
       if (argv.dryRun) {
         console.log(`\nDry run for ${label}:`)
         try {
-          const changes = await rsync.dryRun(subpath, subpath, { delete: useDelete })
+          changes = await rsync.dryRun(subpath, subpath, { delete: useDelete })
           displayDiff(changes, 'push')
         } catch (error) {
           console.error(`Error: ${error.message}`)
@@ -96,7 +98,7 @@ module.exports = {
       if (!argv.y) {
         console.log(`\nPreviewing changes for ${label}...`)
         try {
-          const changes = await rsync.dryRun(subpath, subpath, {
+          changes = await rsync.dryRun(subpath, subpath, {
             delete: useDelete
           })
 
@@ -125,8 +127,11 @@ module.exports = {
         }
       }
 
+      // Skip backup when all files are new (nothing on remote to back up)
+      const allNew = changes && changes.modified.length === 0 && changes.deleted.length === 0
+
       // Backup before pushing (unless --no-backup)
-      if (!argv.noBackup) {
+      if (!argv.noBackup && !allNew) {
         const backupLabel = argv.path ? argv.path.replace(/\//g, '-') : subpath.split('/').pop()
         try {
           await createBackup(rsync, project, argv.target, subpath, backupLabel)
