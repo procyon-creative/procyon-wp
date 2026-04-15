@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/procyon-creative/procyon-wp/compare/v1.0.0...v1.0.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* upgrade to node 22 + npm@latest for OIDC trusted publishing ([#7](https://github.com/procyon-creative/procyon-wp/issues/7)) ([43ecfa9](https://github.com/procyon-creative/procyon-wp/commit/43ecfa97511de6af2c477a25c925548a4e76b56b))
+
 ## 1.0.0 (2026-04-15)
 
 
