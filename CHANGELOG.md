@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/procyon-creative/procyon-wp/compare/v1.0.1...v1.0.2) (2026-04-15)
+
+
+### Bug Fixes
+
+* use node 24 for built-in npm 11 (OIDC trusted publishing) ([#8](https://github.com/procyon-creative/procyon-wp/issues/8)) ([4df80b3](https://github.com/procyon-creative/procyon-wp/commit/4df80b3d077e60abedcf7cc0ad622e3857bad994))
+
 ## [1.0.1](https://github.com/procyon-creative/procyon-wp/compare/v1.0.0...v1.0.1) (2026-04-15)
 
 
