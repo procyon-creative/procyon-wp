@@ -26,11 +26,8 @@ jobs:
       - uses: actions/setup-node@v4
         if: ${{ steps.release.outputs.release_created }}
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
-
-      - run: npm install -g npm@latest
-        if: ${{ steps.release.outputs.release_created }}
 
       - uses: pnpm/action-setup@v4
         if: ${{ steps.release.outputs.release_created }}
