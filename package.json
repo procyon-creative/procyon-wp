@@ -1,6 +1,6 @@
 {
   "name": "@procyon-creative/procyon-wp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "WordPress development CLI for database syncing, file transfers, and environment management",
   "main": "index.js",
   "bin": {

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/procyon-creative/procyon-wp/compare/v1.0.2...v1.0.3) (2026-04-15)
+
+
+### Miscellaneous Chores
+
+* bump to 1.0.3 to skip existing npm versions ([#10](https://github.com/procyon-creative/procyon-wp/issues/10)) ([126160c](https://github.com/procyon-creative/procyon-wp/commit/126160c8379a79e09805378ad44381482cf85d41))
+
 ## [1.0.2](https://github.com/procyon-creative/procyon-wp/compare/v1.0.1...v1.0.2) (2026-04-15)
 
 
