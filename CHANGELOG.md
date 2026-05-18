@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/procyon-creative/procyon-wp/compare/v1.0.3...v1.0.4) (2026-05-18)
+
+
+### Bug Fixes
+
+* remove node_modules/ from default rsync excludes ([#12](https://github.com/procyon-creative/procyon-wp/issues/12)) ([0024567](https://github.com/procyon-creative/procyon-wp/commit/002456799927a7995784f01fa6afcc5307abc2a1))
+
 ## [1.0.3](https://github.com/procyon-creative/procyon-wp/compare/v1.0.2...v1.0.3) (2026-04-15)
 
 
