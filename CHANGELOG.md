@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.5](https://github.com/procyon-creative/procyon-wp/compare/v1.0.4...v1.0.5) (2026-05-19)
+
+
+### Bug Fixes
+
+* **ci:** drop PAT from release-please, use default GITHUB_TOKEN ([#15](https://github.com/procyon-creative/procyon-wp/issues/15)) ([b9676f3](https://github.com/procyon-creative/procyon-wp/commit/b9676f338deb22a3a10ed37618e0ebb96f5d0327))
+* use yargs main entry to support Node 26 (PWC-1) ([#17](https://github.com/procyon-creative/procyon-wp/issues/17)) ([e2c9ff4](https://github.com/procyon-creative/procyon-wp/commit/e2c9ff4942e239831e0ba94882e322bb1de019d8))
+
 ## [1.0.4](https://github.com/procyon-creative/procyon-wp/compare/v1.0.3...v1.0.4) (2026-05-18)
 
 
