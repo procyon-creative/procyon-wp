@@ -195,6 +195,21 @@ class RsyncTransfer {
   }
 
   /**
+   * Download one remote file to a temporary comparison path.
+   * This never changes the project or the remote environment.
+   */
+  async fetchRemoteFile (remoteSub, destination) {
+    fs.mkdirSync(path.dirname(destination), { recursive: true })
+    const args = [
+      '-chaz',
+      '-e', this.buildSshCommand(),
+      this.buildRemote(remoteSub),
+      destination
+    ]
+    return this.exec(args)
+  }
+
+  /**
    * Run an SSH command on the remote
    */
   async ssh (command, options = {}) {

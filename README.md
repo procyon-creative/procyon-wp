@@ -52,6 +52,10 @@ procyon files push staging plugins --name my-plugin --force
 # Preview what would change without transferring
 procyon files push staging themes --dry-run
 
+# Analyze file contents without changing local or remote files
+procyon files push staging themes --diff
+procyon files pull staging plugins --name my-plugin --diff
+
 # Push without creating a backup
 procyon files push live themes --no-backup
 ```

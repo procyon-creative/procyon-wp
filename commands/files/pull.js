@@ -1,5 +1,6 @@
 const path = require('path')
 const { RsyncTransfer, ConnectionError, displayDiff } = require('../../src/sync/rsync')
+const { displayContentDiffs } = require('../../src/sync/file-diff')
 const { getEnvironment } = require('../../src/config/store')
 
 const ITEM_PATHS = {
@@ -31,6 +32,11 @@ module.exports = {
       type: 'boolean',
       describe: 'Preview changes without transferring',
       default: false
+    },
+    diff: {
+      type: 'boolean',
+      describe: 'Show read-only content differences without transferring files',
+      default: false
     }
   },
   handler: async (argv) => {
@@ -61,6 +67,22 @@ module.exports = {
     }
 
     for (const { subpath, label, useDelete } of subpaths) {
+      if (argv.diff) {
+        console.log(`\nRead-only diff for ${label}:`)
+        try {
+          const changes = await rsync.dryRun(subpath, subpath, {
+            direction: 'pull',
+            delete: useDelete
+          })
+          displayDiff(changes, 'pull')
+          await displayContentDiffs(rsync, subpath, changes, 'pull')
+        } catch (error) {
+          console.error(`Error: ${error.message}`)
+          if (error instanceof ConnectionError) process.exit(1)
+        }
+        continue
+      }
+
       // --dry-run: show parsed diff and stop
       if (argv.dryRun) {
         console.log(`\nDry run for ${label}:`)
