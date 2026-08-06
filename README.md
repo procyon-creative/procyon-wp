@@ -3,13 +3,14 @@ Procyon CLI
 A WordPress development toolkit that automates database syncing, file transfers, and environment management between local, staging, and live environments.
 
 ## Installation
-```
-npm install -g @procyon-creative/procyon-wp
+```bash
+pnpm add --global @procyon-creative/procyon-wp
 ```
 
 Or check out the repo and run:
-```
-npm link
+```bash
+pnpm install
+pnpm link --global
 ```
 
 ## Quick Start
@@ -139,7 +140,7 @@ Each project directory contains a `.procyon` link file pointing to the config:
 
 ```bash
 pnpm install
-npm test
-npm run lint
+pnpm test
+pnpm lint
 node index.js <command> [options]
 ```

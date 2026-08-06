@@ -49,5 +49,8 @@
     "hooks": {
       "pre-commit": "npm run lint"
     }
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }
