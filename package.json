@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "vitest run",
+    "test:remote": "PROCYON_REMOTE_TESTS=1 vitest run tests/integration/remote-file-diff.test.js",
     "test:watch": "vitest",
     "lint": "eslint 'commands/**/*.js' 'src/**/*.js' index.js --fix",
     "prepare": "husky install || true"
