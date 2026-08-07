@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
-const { RsyncTransfer, parseItemizedChanges, shellQuote } = require('../src/sync/rsync')
+const { RsyncTransfer, buildDepthExcludeArgs, parseItemizedChanges, shellQuote } = require('../src/sync/rsync')
 
 const mockProject = {
   name: 'test-site',
@@ -241,5 +241,21 @@ describe('shellQuote', () => {
 
   it('handles paths with spaces', () => {
     expect(shellQuote('/my path/to dir')).toBe("'/my path/to dir'")
+  })
+})
+
+describe('buildDepthExcludeArgs', () => {
+  it('leaves traversal unlimited when no depth is supplied', () => {
+    expect(buildDepthExcludeArgs()).toEqual([])
+  })
+
+  it('excludes directories below the requested depth', () => {
+    expect(buildDepthExcludeArgs(0)).toEqual(['--exclude', '/*/'])
+    expect(buildDepthExcludeArgs(2)).toEqual(['--exclude', '/*/*/*/'])
+  })
+
+  it('rejects invalid depths', () => {
+    expect(() => buildDepthExcludeArgs(-1)).toThrow('non-negative integer')
+    expect(() => buildDepthExcludeArgs(1.5)).toThrow('non-negative integer')
   })
 })

@@ -53,16 +53,33 @@ function safeJoin (root, relativePath) {
   return resolvedPath
 }
 
-async function displayContentDiffs (rsync, subpath, changes, direction = 'push') {
+async function displayContentDiffs (rsync, subpath, changes, direction = 'push', options = {}) {
   if (changes.modified.length === 0) return
+
+  const limit = options.limit ?? 200
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new Error('--diff-limit must be a positive integer')
+  }
+  if (changes.modified.length > limit) {
+    throw new Error(
+      `Diff contains ${changes.modified.length} modified files; limit is ${limit}. ` +
+      `Use --diff-limit ${changes.modified.length} to continue.`
+    )
+  }
 
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'procyon-diff-'))
   try {
+    const localRoot = rsync.buildLocal(subpath)
+    for (const relativePath of changes.modified) {
+      safeJoin(localRoot, relativePath)
+      safeJoin(tempDir, relativePath)
+    }
+    await rsync.fetchRemoteFiles(subpath, changes.modified, tempDir)
+
     console.log('\nContent differences:')
     for (const relativePath of changes.modified) {
-      const localPath = safeJoin(rsync.buildLocal(subpath), relativePath)
+      const localPath = safeJoin(localRoot, relativePath)
       const remoteCopy = safeJoin(tempDir, relativePath)
-      await rsync.fetchRemoteFile(path.posix.join(subpath, relativePath), remoteCopy)
 
       const oldPath = direction === 'push' ? remoteCopy : localPath
       const newPath = direction === 'push' ? localPath : remoteCopy

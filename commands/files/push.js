@@ -41,6 +41,15 @@ module.exports = {
       describe: 'Show read-only content differences without transferring files',
       default: false
     },
+    'diff-depth': {
+      type: 'number',
+      describe: 'Limit --diff directory traversal depth'
+    },
+    'diff-limit': {
+      type: 'number',
+      describe: 'Maximum modified files to render with --diff',
+      default: 200
+    },
     y: {
       type: 'boolean',
       describe: 'Skip confirmation prompts'
@@ -90,9 +99,12 @@ module.exports = {
       if (argv.diff) {
         console.log(`\nRead-only diff for ${label}:`)
         try {
-          changes = await rsync.dryRun(subpath, subpath, { delete: useDelete })
+          changes = await rsync.dryRun(subpath, subpath, {
+            delete: useDelete,
+            maxDepth: argv.diffDepth
+          })
           displayDiff(changes, 'push')
-          await displayContentDiffs(rsync, subpath, changes, 'push')
+          await displayContentDiffs(rsync, subpath, changes, 'push', { limit: argv.diffLimit })
         } catch (error) {
           console.error(`Error: ${error.message}`)
           if (error instanceof ConnectionError) process.exit(1)

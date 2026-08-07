@@ -56,6 +56,9 @@ procyon files push staging themes --dry-run
 procyon files push staging themes --diff
 procyon files pull staging plugins --name my-plugin --diff
 
+# Bound traversal and content output for a large tree
+procyon files pull staging --path wp-content --diff --diff-depth 3 --diff-limit 500
+
 # Push without creating a backup
 procyon files push live themes --no-backup
 ```

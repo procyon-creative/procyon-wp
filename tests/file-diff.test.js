@@ -68,29 +68,53 @@ describe('renderFileDiff', () => {
 })
 
 describe('displayContentDiffs', () => {
+  it('stops before fetching when the modified-file limit is exceeded', async () => {
+    const rsync = {
+      fetchRemoteFiles: vi.fn()
+    }
+
+    await expect(displayContentDiffs(rsync, 'wp-content', {
+      added: [],
+      modified: ['one.php', 'two.php'],
+      deleted: []
+    }, 'push', { limit: 1 })).rejects.toThrow('Diff contains 2 modified files; limit is 1')
+
+    expect(rsync.fetchRemoteFiles).not.toHaveBeenCalled()
+  })
+
   it('compares remote to local for push and cleans up the remote copy', async () => {
     const localRoot = tempDir()
     fs.writeFileSync(path.join(localRoot, 'file.txt'), 'local\n')
-    let fetchedPath
+    fs.writeFileSync(path.join(localRoot, 'second.txt'), 'second local\n')
+    const fetchedPaths = []
     const rsync = {
       buildLocal: () => localRoot,
-      fetchRemoteFile: vi.fn(async (_remotePath, destination) => {
-        fetchedPath = destination
-        fs.writeFileSync(destination, 'remote\n')
+      fetchRemoteFiles: vi.fn(async (_remotePath, relativePaths, destination) => {
+        for (const relativePath of relativePaths) {
+          const fetchedPath = path.join(destination, relativePath)
+          fetchedPaths.push(fetchedPath)
+          fs.writeFileSync(fetchedPath, `remote ${relativePath}\n`)
+        }
       })
     }
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
 
     await displayContentDiffs(rsync, 'wp-content/themes/example', {
       added: [],
-      modified: ['file.txt'],
+      modified: ['file.txt', 'second.txt'],
       deleted: []
     }, 'push')
 
-    expect(rsync.fetchRemoteFile).toHaveBeenCalledWith('wp-content/themes/example/file.txt', expect.any(String))
+    expect(rsync.fetchRemoteFiles).toHaveBeenCalledWith(
+      'wp-content/themes/example',
+      ['file.txt', 'second.txt'],
+      expect.any(String)
+    )
+    expect(rsync.fetchRemoteFiles).toHaveBeenCalledTimes(1)
     expect(log.mock.calls.flat().join('\n')).toContain('--- remote/file.txt')
     expect(log.mock.calls.flat().join('\n')).toContain('+++ local/file.txt')
-    expect(fs.existsSync(fetchedPath)).toBe(false)
+    expect(log.mock.calls.flat().join('\n')).toContain('--- remote/second.txt')
+    expect(fetchedPaths.every(fetchedPath => !fs.existsSync(fetchedPath))).toBe(true)
     expect(fs.readFileSync(path.join(localRoot, 'file.txt'), 'utf8')).toBe('local\n')
   })
 
@@ -99,8 +123,8 @@ describe('displayContentDiffs', () => {
     fs.writeFileSync(path.join(localRoot, 'file.txt'), 'local\n')
     const rsync = {
       buildLocal: () => localRoot,
-      fetchRemoteFile: vi.fn(async (_remotePath, destination) => {
-        fs.writeFileSync(destination, 'remote\n')
+      fetchRemoteFiles: vi.fn(async (_remotePath, relativePaths, destination) => {
+        fs.writeFileSync(path.join(destination, relativePaths[0]), 'remote\n')
       })
     }
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})

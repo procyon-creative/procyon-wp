@@ -161,7 +161,8 @@ class RsyncTransfer {
       '--dry-run',
       '--itemize-changes',
       '-e', this.buildSshCommand(),
-      ...excludeArgs
+      ...excludeArgs,
+      ...buildDepthExcludeArgs(options.maxDepth)
     ]
 
     if (options.delete) args.push('--delete-after')
@@ -195,18 +196,31 @@ class RsyncTransfer {
   }
 
   /**
-   * Download one remote file to a temporary comparison path.
-   * This never changes the project or the remote environment.
+   * Download selected remote files in one rsync connection.
+   * The NUL-delimited file list preserves spaces and special characters.
    */
-  async fetchRemoteFile (remoteSub, destination) {
-    fs.mkdirSync(path.dirname(destination), { recursive: true })
+  async fetchRemoteFiles (remoteSub, relativePaths, destination) {
+    if (relativePaths.length === 0) return
+
+    fs.mkdirSync(destination, { recursive: true })
+    const listDir = fs.mkdtempSync(path.join(os.tmpdir(), 'procyon-files-from-'))
+    const listPath = path.join(listDir, 'files')
+    fs.writeFileSync(listPath, `${relativePaths.join('\0')}\0`)
+
     const args = [
       '-chaz',
+      '--from0',
+      `--files-from=${listPath}`,
       '-e', this.buildSshCommand(),
-      this.buildRemote(remoteSub),
-      destination
+      ensureTrailingSlash(this.buildRemote(remoteSub)),
+      ensureTrailingSlash(destination)
     ]
-    return this.exec(args)
+
+    try {
+      return await this.exec(args)
+    } finally {
+      fs.rmSync(listDir, { recursive: true, force: true })
+    }
   }
 
   /**
@@ -276,6 +290,14 @@ function shellQuote (s) {
 
 function ensureTrailingSlash (p) {
   return p.endsWith('/') ? p : p + '/'
+}
+
+function buildDepthExcludeArgs (maxDepth) {
+  if (maxDepth === undefined) return []
+  if (!Number.isInteger(maxDepth) || maxDepth < 0) {
+    throw new Error('--diff-depth must be a non-negative integer')
+  }
+  return ['--exclude', `/${'*/'.repeat(maxDepth + 1)}`]
 }
 
 /**
@@ -358,4 +380,4 @@ function displayDiff (changes, direction = 'push') {
   return true
 }
 
-module.exports = { RsyncTransfer, ConnectionError, parseItemizedChanges, displayDiff, shellQuote }
+module.exports = { RsyncTransfer, ConnectionError, buildDepthExcludeArgs, parseItemizedChanges, displayDiff, shellQuote }
