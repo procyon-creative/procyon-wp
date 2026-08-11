@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
-const { RsyncTransfer, buildDepthExcludeArgs, parseItemizedChanges, shellQuote } = require('../src/sync/rsync')
+const { RsyncTransfer, buildDepthExcludeArgs, parseItemizedChanges, displayDiff, shellQuote } = require('../src/sync/rsync')
 
 const mockProject = {
   name: 'test-site',
@@ -149,6 +149,14 @@ describe('parseItemizedChanges', () => {
     expect(result.added).toEqual(['new-dir/'])
   })
 
+  it('parses added and modified symlinks', () => {
+    const output = 'cL+++++++++ current\n<L..t...... previous\n'
+    const result = parseItemizedChanges(output)
+    expect(result.added).toEqual(['current'])
+    expect(result.modified).toEqual(['previous'])
+    expect(result.contentModified).toEqual([])
+  })
+
   it('parses mixed output', () => {
     const output = [
       '>f+++++++++ new.txt',
@@ -183,6 +191,29 @@ describe('parseItemizedChanges', () => {
     expect(result.added).toEqual([])
     expect(result.modified).toEqual([])
     expect(result.deleted).toEqual([])
+  })
+})
+
+describe('displayDiff', () => {
+  it('uses hypothetical wording for read-only analysis', () => {
+    const lines = []
+    const originalLog = console.log
+    console.log = (...args) => lines.push(args.join(' '))
+    try {
+      displayDiff({
+        added: ['new.txt'],
+        modified: ['changed.txt'],
+        deleted: ['old.txt']
+      }, 'push', { readOnly: true })
+    } finally {
+      console.log = originalLog
+    }
+
+    const output = lines.join('\n')
+    expect(output).toContain('would be added')
+    expect(output).toContain('would overwrite')
+    expect(output).toContain('would be removed')
+    expect(output).not.toContain('will be')
   })
 })
 

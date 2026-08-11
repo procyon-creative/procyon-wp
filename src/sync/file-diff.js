@@ -53,41 +53,49 @@ function safeJoin (root, relativePath) {
   return resolvedPath
 }
 
-async function displayContentDiffs (rsync, subpath, changes, direction = 'push', options = {}) {
-  if (changes.modified.length === 0) return
-
-  const limit = options.limit ?? 200
+function validateContentLimit (contentModified, limit = 200) {
   if (!Number.isInteger(limit) || limit < 1) {
     throw new Error('--diff-limit must be a positive integer')
   }
-  if (changes.modified.length > limit) {
+  if (contentModified.length > limit) {
     throw new Error(
-      `Diff contains ${changes.modified.length} modified files; limit is ${limit}. ` +
-      `Use --diff-limit ${changes.modified.length} to continue.`
+      `Diff contains ${contentModified.length} modified files; limit is ${limit}. ` +
+      `Use --diff-limit ${contentModified.length} to continue.`
     )
   }
+}
+
+function buildComparisons (rsync, subpath, relativePaths, tempDir) {
+  const localRoot = rsync.buildLocal(subpath)
+  return relativePaths.map(relativePath => ({
+    relativePath,
+    localPath: safeJoin(localRoot, relativePath),
+    remoteCopy: safeJoin(tempDir, relativePath)
+  }))
+}
+
+function renderComparisons (comparisons, direction) {
+  console.log('\nContent differences:')
+  for (const { relativePath, localPath, remoteCopy } of comparisons) {
+    const oldPath = direction === 'push' ? remoteCopy : localPath
+    const newPath = direction === 'push' ? localPath : remoteCopy
+    const oldLabel = direction === 'push' ? `remote/${relativePath}` : `local/${relativePath}`
+    const newLabel = direction === 'push' ? `local/${relativePath}` : `remote/${relativePath}`
+
+    console.log(`\n${renderFileDiff(oldPath, newPath, { old: oldLabel, new: newLabel })}`)
+  }
+}
+
+async function displayContentDiffs (rsync, subpath, changes, direction = 'push', options = {}) {
+  const contentModified = changes.contentModified ?? changes.modified
+  if (contentModified.length === 0) return
+  validateContentLimit(contentModified, options.limit)
 
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'procyon-diff-'))
   try {
-    const localRoot = rsync.buildLocal(subpath)
-    for (const relativePath of changes.modified) {
-      safeJoin(localRoot, relativePath)
-      safeJoin(tempDir, relativePath)
-    }
-    await rsync.fetchRemoteFiles(subpath, changes.modified, tempDir)
-
-    console.log('\nContent differences:')
-    for (const relativePath of changes.modified) {
-      const localPath = safeJoin(localRoot, relativePath)
-      const remoteCopy = safeJoin(tempDir, relativePath)
-
-      const oldPath = direction === 'push' ? remoteCopy : localPath
-      const newPath = direction === 'push' ? localPath : remoteCopy
-      const oldLabel = direction === 'push' ? `remote/${relativePath}` : `local/${relativePath}`
-      const newLabel = direction === 'push' ? `local/${relativePath}` : `remote/${relativePath}`
-
-      console.log(`\n${renderFileDiff(oldPath, newPath, { old: oldLabel, new: newLabel })}`)
-    }
+    const comparisons = buildComparisons(rsync, subpath, contentModified, tempDir)
+    await rsync.fetchRemoteFiles(subpath, contentModified, tempDir)
+    renderComparisons(comparisons, direction)
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
   }

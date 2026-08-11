@@ -1,13 +1,6 @@
-const path = require('path')
 const { RsyncTransfer, ConnectionError, displayDiff } = require('../../src/sync/rsync')
-const { displayContentDiffs } = require('../../src/sync/file-diff')
 const { getEnvironment } = require('../../src/config/store')
-
-const ITEM_PATHS = {
-  themes: 'wp-content/themes',
-  plugins: 'wp-content/plugins',
-  uploads: 'wp-content/uploads'
-}
+const { FILE_DIFF_OPTIONS, buildTransferSubpaths, runReadOnlyDiff } = require('./shared')
 
 module.exports = {
   command: 'pull <target> [item] [name]',
@@ -33,20 +26,7 @@ module.exports = {
       describe: 'Preview changes without transferring',
       default: false
     },
-    diff: {
-      type: 'boolean',
-      describe: 'Show read-only content differences without transferring files',
-      default: false
-    },
-    'diff-depth': {
-      type: 'number',
-      describe: 'Limit --diff directory traversal depth'
-    },
-    'diff-limit': {
-      type: 'number',
-      describe: 'Maximum modified files to render with --diff',
-      default: 200
-    }
+    ...FILE_DIFF_OPTIONS
   },
   handler: async (argv) => {
     const project = argv.project
@@ -58,37 +38,15 @@ module.exports = {
 
     const rsync = new RsyncTransfer(project, env)
 
-    // Build list of subpaths to pull
-    const subpaths = []
-    if (argv.path) {
-      if (path.isAbsolute(argv.path)) {
-        console.error(`--path must be relative to localPath (${project.localPath})`)
-        process.exit(1)
-      }
-      subpaths.push({ subpath: argv.path, label: argv.path, useDelete: true })
-    } else {
-      const items = argv.item === 'all' ? ['themes', 'plugins', 'uploads'] : [argv.item]
-      for (const item of items) {
-        let subpath = ITEM_PATHS[item]
-        if (argv.name) subpath = `${subpath}/${argv.name}`
-        subpaths.push({ subpath, label: `${item}${argv.name ? ` (${argv.name})` : ''}`, useDelete: item !== 'uploads' })
-      }
-    }
+    const subpaths = buildTransferSubpaths(argv, project)
 
     for (const { subpath, label, useDelete } of subpaths) {
       if (argv.diff) {
-        console.log(`\nRead-only diff for ${label}:`)
         try {
-          const changes = await rsync.dryRun(subpath, subpath, {
-            direction: 'pull',
-            delete: useDelete,
-            maxDepth: argv.diffDepth
-          })
-          displayDiff(changes, 'pull')
-          await displayContentDiffs(rsync, subpath, changes, 'pull', { limit: argv.diffLimit })
+          await runReadOnlyDiff(rsync, { subpath, label, useDelete }, 'pull', argv)
         } catch (error) {
           console.error(`Error: ${error.message}`)
-          if (error instanceof ConnectionError) process.exit(1)
+          throw error
         }
         continue
       }

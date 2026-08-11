@@ -68,6 +68,27 @@ describe('renderFileDiff', () => {
 })
 
 describe('displayContentDiffs', () => {
+  it('cleans up temporary files when remote retrieval fails', async () => {
+    const localRoot = tempDir()
+    fs.writeFileSync(path.join(localRoot, 'file.txt'), 'local\n')
+    let destination
+    const rsync = {
+      buildLocal: () => localRoot,
+      fetchRemoteFiles: vi.fn(async (_remotePath, _relativePaths, tempDir) => {
+        destination = tempDir
+        throw new Error('remote failed')
+      })
+    }
+
+    await expect(displayContentDiffs(rsync, 'wp-content', {
+      added: [],
+      modified: ['file.txt'],
+      deleted: []
+    })).rejects.toThrow('remote failed')
+
+    expect(fs.existsSync(destination)).toBe(false)
+  })
+
   it('stops before fetching when the modified-file limit is exceeded', async () => {
     const rsync = {
       fetchRemoteFiles: vi.fn()

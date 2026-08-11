@@ -326,6 +326,7 @@ function isFilePath (localPath) {
 function parseItemizedChanges (output) {
   const added = []
   const modified = []
+  const contentModified = []
   const deleted = []
 
   for (const line of output.split('\n')) {
@@ -334,28 +335,33 @@ function parseItemizedChanges (output) {
 
     if (trimmed.startsWith('*deleting')) {
       deleted.push(trimmed.replace('*deleting   ', ''))
-    } else if (/^[<>c]f\+{9}/.test(trimmed)) {
-      // New file (sent, received, or local)
-      added.push(trimmed.substring(12).trim())
-    } else if (/^[<>c]f/.test(trimmed)) {
-      // Modified file
-      modified.push(trimmed.substring(12).trim())
-    } else if (/^[<>c.]d\+{9}/.test(trimmed)) {
-      // New directory
-      added.push(trimmed.substring(12).trim())
+    } else {
+      const item = trimmed.match(/^([<>ch.])([fdLDS])(.{9})\s+(.+)$/)
+      if (!item) continue
+
+      const [, updateType, itemType, attributes, itemPath] = item
+      if (attributes === '+++++++++') {
+        added.push(itemPath)
+      } else if (updateType !== '.') {
+        modified.push(itemPath)
+        if (itemType === 'f') contentModified.push(itemPath)
+      }
     }
   }
 
-  return { added, modified, deleted }
+  return { added, modified, contentModified, deleted }
 }
 
 /**
  * Print a human-readable diff summary.
  * direction: 'push' (local overwrites remote) or 'pull' (remote overwrites local)
  */
-function displayDiff (changes, direction = 'push') {
+function displayDiff (changes, direction = 'push', options = {}) {
   const arrow = direction === 'push' ? '⬆️' : '⬇️'
   const target = direction === 'push' ? 'remote' : 'local'
+  const verbs = options.readOnly
+    ? { added: 'would be added', modified: 'would overwrite', deleted: 'would be removed' }
+    : { added: 'will be added', modified: 'will overwrite', deleted: 'will be removed' }
 
   if (changes.added.length === 0 && changes.modified.length === 0 && changes.deleted.length === 0) {
     console.log('No changes.')
@@ -364,15 +370,15 @@ function displayDiff (changes, direction = 'push') {
 
   console.log()
   if (changes.added.length > 0) {
-    console.log(`  ${arrow}  New files (will be added to ${target}):`)
+    console.log(`  ${arrow}  New items (${verbs.added} to ${target}):`)
     for (const f of changes.added) console.log(`       + ${f}`)
   }
   if (changes.modified.length > 0) {
-    console.log(`  ${arrow}  Modified files (will overwrite ${target}):`)
+    console.log(`  ${arrow}  Modified items (${verbs.modified} ${target}):`)
     for (const f of changes.modified) console.log(`       ✏️  ${f}`)
   }
   if (changes.deleted.length > 0) {
-    console.log(`  🗑️  Deleted files (will be removed from ${target}):`)
+    console.log(`  🗑️  Deleted items (${verbs.deleted} from ${target}):`)
     for (const f of changes.deleted) console.log(`       - ${f}`)
   }
 

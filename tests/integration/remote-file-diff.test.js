@@ -28,12 +28,19 @@ remoteDescribe('file diff against a disposable SSH remote', () => {
     docker('run', '--detach', '--rm', '--name', container, '--publish', '127.0.0.1::22', 'alpine:3.22', 'sleep', 'infinity')
     docker('exec', container, 'apk', 'add', '--no-cache', 'openssh', 'rsync')
     docker('exec', container, 'ssh-keygen', '-A')
-    docker('exec', container, 'mkdir', '-p', '/root/.ssh', '/remote/site/nested')
+    docker('exec', container, 'mkdir', '-p', '/root/.ssh', '/remote/site/nested', '/remote/cases')
     execFileSync('docker', ['exec', '-i', container, 'sh', '-c', 'cat > /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys'], {
       input: fs.readFileSync(`${keyPath}.pub`)
     })
     docker('exec', container, 'sh', '-c', "printf 'same\\nremote line\\n' > /remote/site/file.txt")
     docker('exec', container, 'sh', '-c', "printf 'remote deep\\n' > /remote/site/nested/deep.txt")
+    docker('exec', container, 'sh', '-c', "printf 'remote only\\n' > /remote/cases/remote-only.txt")
+    docker('exec', container, 'sh', '-c', "printf 'same\\n' > /remote/cases/unchanged.txt")
+    docker('exec', container, 'sh', '-c', "printf 'remote ignored\\n' > /remote/cases/ignored.txt")
+    execFileSync('docker', ['exec', '-i', container, 'sh', '-c', 'cat > /remote/cases/binary.dat'], {
+      input: Buffer.from([1, 0, 2])
+    })
+    docker('exec', container, 'sh', '-c', 'head -c 1048577 /dev/zero | tr "\\0" a > /remote/cases/large.txt')
     docker('exec', container, '/usr/sbin/sshd')
 
     const port = docker('port', container, '22/tcp').split(':').pop()
@@ -42,8 +49,18 @@ remoteDescribe('file diff against a disposable SSH remote', () => {
     fs.writeFileSync(path.join(localRoot, 'site/file.txt'), 'same\nlocal line\n')
     fs.mkdirSync(path.join(localRoot, 'site/nested'))
     fs.writeFileSync(path.join(localRoot, 'site/nested/deep.txt'), 'local deep\n')
+    fs.mkdirSync(path.join(localRoot, 'cases'))
+    fs.writeFileSync(path.join(localRoot, 'cases/local-only.txt'), 'local only\n')
+    fs.writeFileSync(path.join(localRoot, 'cases/unchanged.txt'), 'same\n')
+    fs.writeFileSync(path.join(localRoot, 'cases/ignored.txt'), 'local ignored\n')
+    fs.writeFileSync(path.join(localRoot, 'cases/binary.dat'), Buffer.from([1, 0, 3]))
+    fs.writeFileSync(path.join(localRoot, 'cases/large.txt'), 'b'.repeat(1048577))
 
-    rsync = new RsyncTransfer({ localPath: localRoot }, {
+    rsync = new RsyncTransfer({
+      localPath: localRoot,
+      excludeFile: path.join(directory, 'missing-excludes'),
+      exclude: ['ignored.txt']
+    }, {
       host: '127.0.0.1',
       user: 'root',
       port: Number(port),
@@ -108,5 +125,30 @@ remoteDescribe('file diff against a disposable SSH remote', () => {
 
     const rootOnly = await rsync.dryRun('site', 'site', { maxDepth: 0 })
     expect(rootOnly.modified).toEqual(['file.txt'])
+  })
+
+  it('classifies added, deleted, unchanged, binary, large, and excluded files', async () => {
+    const localBinaryBefore = fs.readFileSync(rsync.buildLocal('cases/binary.dat'))
+    const remoteBinaryBefore = docker('exec', container, 'sha256sum', '/remote/cases/binary.dat')
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    const pushChanges = await rsync.dryRun('cases', 'cases', { delete: true })
+    expect(pushChanges.added).toContain('local-only.txt')
+    expect(pushChanges.deleted).toContain('remote-only.txt')
+    expect(pushChanges.contentModified).toEqual(expect.arrayContaining(['binary.dat', 'large.txt']))
+    expect([...pushChanges.added, ...pushChanges.modified, ...pushChanges.deleted]).not.toContain('unchanged.txt')
+    expect([...pushChanges.added, ...pushChanges.modified, ...pushChanges.deleted]).not.toContain('ignored.txt')
+
+    await displayContentDiffs(rsync, 'cases', pushChanges, 'push')
+    const output = log.mock.calls.flat().join('\n')
+    expect(output).toContain('Binary files differ; content diff is not displayed.')
+    expect(output).toContain('Binary/content diff skipped (file exceeds 1048576 bytes).')
+
+    const pullChanges = await rsync.dryRun('cases', 'cases', { direction: 'pull', delete: true })
+    expect(pullChanges.added).toContain('remote-only.txt')
+    expect(pullChanges.deleted).toContain('local-only.txt')
+
+    expect(fs.readFileSync(rsync.buildLocal('cases/binary.dat'))).toEqual(localBinaryBefore)
+    expect(docker('exec', container, 'sha256sum', '/remote/cases/binary.dat')).toBe(remoteBinaryBefore)
   })
 })
