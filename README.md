@@ -3,13 +3,14 @@ Procyon CLI
 A WordPress development toolkit that automates database syncing, file transfers, and environment management between local, staging, and live environments.
 
 ## Installation
-```
-npm install -g @procyon-creative/procyon-wp
+```bash
+pnpm add --global @procyon-creative/procyon-wp
 ```
 
 Or check out the repo and run:
-```
-npm link
+```bash
+pnpm install
+pnpm link --global
 ```
 
 ## Quick Start
@@ -50,6 +51,13 @@ procyon files push staging plugins --name my-plugin --force
 
 # Preview what would change without transferring
 procyon files push staging themes --dry-run
+
+# Analyze file contents without changing local or remote files
+procyon files push staging themes --diff
+procyon files pull staging plugins --name my-plugin --diff
+
+# Bound traversal and content output for a large tree
+procyon files pull staging --path wp-content --diff --diff-depth 3 --diff-limit 500
 
 # Push without creating a backup
 procyon files push live themes --no-backup
@@ -139,7 +147,7 @@ Each project directory contains a `.procyon` link file pointing to the config:
 
 ```bash
 pnpm install
-npm test
-npm run lint
+pnpm test
+pnpm lint
 node index.js <command> [options]
 ```

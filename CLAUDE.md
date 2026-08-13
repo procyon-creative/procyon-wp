@@ -13,16 +13,16 @@ Procyon CLI is a WordPress development toolkit that automates database syncing, 
 pnpm install
 
 # Lint (runs on pre-commit via husky)
-npm run lint
+pnpm lint
 
 # Run tests
-npm test
+pnpm test
 
 # Run CLI locally during development
 node index.js <command> [options]
 
 # Install globally for testing
-npm link
+pnpm link --global
 ```
 
 ## Architecture

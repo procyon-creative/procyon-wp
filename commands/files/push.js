@@ -1,15 +1,8 @@
-const path = require('path')
-const fs = require('fs')
 const { RsyncTransfer, ConnectionError, displayDiff } = require('../../src/sync/rsync')
 const { getEnvironment } = require('../../src/config/store')
 const { createBackup } = require('../../src/sync/backup')
 const { prompt } = require('enquirer')
-
-const ITEM_PATHS = {
-  themes: 'wp-content/themes',
-  plugins: 'wp-content/plugins',
-  uploads: 'wp-content/uploads'
-}
+const { FILE_DIFF_OPTIONS, buildTransferSubpaths, runReadOnlyDiff } = require('./shared')
 
 module.exports = {
   command: 'push <target> [item] [name]',
@@ -35,6 +28,7 @@ module.exports = {
       describe: 'Preview changes without transferring',
       default: false
     },
+    ...FILE_DIFF_OPTIONS,
     y: {
       type: 'boolean',
       describe: 'Skip confirmation prompts'
@@ -55,31 +49,20 @@ module.exports = {
 
     const rsync = new RsyncTransfer(project, env)
 
-    // Build list of subpaths to push
-    const subpaths = []
-    if (argv.path) {
-      if (path.isAbsolute(argv.path)) {
-        console.error(`--path must be relative to localPath (${project.localPath})`)
-        process.exit(1)
-      }
-      const fullPath = path.join(project.localPath, argv.path)
-      if (!fs.existsSync(fullPath)) {
-        console.error(`Path not found: ${fullPath}`)
-        console.error(`--path must be relative to localPath (${project.localPath})`)
-        process.exit(1)
-      }
-      subpaths.push({ subpath: argv.path, label: argv.path, useDelete: true })
-    } else {
-      const items = argv.item === 'all' ? ['themes', 'plugins', 'uploads'] : [argv.item]
-      for (const item of items) {
-        let subpath = ITEM_PATHS[item]
-        if (argv.name) subpath = `${subpath}/${argv.name}`
-        subpaths.push({ subpath, label: `${item}${argv.name ? ` (${argv.name})` : ''}`, useDelete: item !== 'uploads' })
-      }
-    }
+    const subpaths = buildTransferSubpaths(argv, project, { requireExistingPath: true })
 
     for (const { subpath, label, useDelete } of subpaths) {
       let changes = null
+
+      if (argv.diff) {
+        try {
+          await runReadOnlyDiff(rsync, { subpath, label, useDelete }, 'push', argv)
+        } catch (error) {
+          console.error(`Error: ${error.message}`)
+          throw error
+        }
+        continue
+      }
 
       // --dry-run: show parsed diff and stop
       if (argv.dryRun) {

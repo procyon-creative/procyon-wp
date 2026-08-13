@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "vitest run",
+    "test:remote": "PROCYON_REMOTE_TESTS=1 vitest run tests/integration/remote-file-diff.test.js",
     "test:watch": "vitest",
     "lint": "eslint 'commands/**/*.js' 'src/**/*.js' index.js --fix",
     "prepare": "husky install || true"
@@ -32,6 +33,7 @@
   },
   "dependencies": {
     "csv-parser": "^3.0.0",
+    "diff": "^9.0.0",
     "enquirer": "^2.3.6",
     "ssh-config": "^5.1.0",
     "yargs": "^17.7.2"
@@ -49,5 +51,8 @@
     "hooks": {
       "pre-commit": "npm run lint"
     }
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }
