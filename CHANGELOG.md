@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.0](https://github.com/procyon-creative/procyon-wp/compare/v1.0.5...v1.1.0) (2026-08-13)
+
+
+### Features
+
+* **files:** add read-only content diff analysis ([f9d4018](https://github.com/procyon-creative/procyon-wp/commit/f9d4018544977bd230a4f37a17815c3add4a74f2))
+* **files:** add read-only content diff analysis ([dcf2cb9](https://github.com/procyon-creative/procyon-wp/commit/dcf2cb9ba0c2242f3da67789c0d0318f5d5be522))
+
+
+### Bug Fixes
+
+* **files:** harden read-only diff analysis ([92b995c](https://github.com/procyon-creative/procyon-wp/commit/92b995cb35cc323d823629627a8cda56c959fe3d))
+
+
+### Performance Improvements
+
+* **files:** bound and batch remote diff analysis ([4c2f8fd](https://github.com/procyon-creative/procyon-wp/commit/4c2f8fd5aa3e4c768493e7bd2cb06a91a014c824))
+
 ## [1.0.5](https://github.com/procyon-creative/procyon-wp/compare/v1.0.4...v1.0.5) (2026-05-19)
 
 
