@@ -64,6 +64,17 @@ function getProjectFromCwd (cwd) {
   return null
 }
 
+function findProjectConflicts (name, projectPath) {
+  const existing = getProject(name)
+  const nameConflict = existing && path.resolve(existing.projectPath) !== path.resolve(projectPath)
+    ? existing
+    : null
+  const linked = getProjectFromCwd(projectPath)
+  const pathConflict = linked && linked.name !== name ? linked : null
+
+  return { name: nameConflict, path: pathConflict }
+}
+
 function getEnvironment (projectName, envName) {
   const project = typeof projectName === 'string' ? getProject(projectName) : projectName
   if (!project) return null
@@ -108,6 +119,7 @@ module.exports = {
   listProjects,
   removeProject,
   getProjectFromCwd,
+  findProjectConflicts,
   getEnvironment,
   addEnvironment,
   updateEnvironment,

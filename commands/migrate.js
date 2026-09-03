@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const { prompt } = require('enquirer')
 const { saveProject } = require('../src/config/store')
+const { confirmProjectName } = require('../src/config/collisions')
 const { lookupSshHost } = require('../src/ssh-config')
 
 module.exports = {
@@ -100,6 +101,11 @@ module.exports = {
       }
       const l = config.environments.live
       console.log(`  live: ${envConfig.LIVE_SSH} -> host: ${l.host}, user: ${l.user}, port: ${l.port}`)
+    }
+
+    if (!await confirmProjectName(projectName, config.projectPath, argv.y)) {
+      console.log('Migration cancelled.')
+      return
     }
 
     const configPath = saveProject(projectName, config)
