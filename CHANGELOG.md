@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/procyon-creative/procyon-wp/compare/v1.1.0...v1.1.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **cli:** render command positionals under Positionals in help ([#22](https://github.com/procyon-creative/procyon-wp/issues/22)) ([1272307](https://github.com/procyon-creative/procyon-wp/commit/127230746a92cde9938ff18fb2c887693b94112a))
+* **config:** warn before overwriting or duplicating a project ([#24](https://github.com/procyon-creative/procyon-wp/issues/24)) ([f83e1d6](https://github.com/procyon-creative/procyon-wp/commit/f83e1d6db0a8cfc1dba79d1817312f157ad5591d))
+
 ## [1.1.0](https://github.com/procyon-creative/procyon-wp/compare/v1.0.5...v1.1.0) (2026-08-13)
 
 
