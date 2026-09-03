@@ -8,15 +8,15 @@ const { RsyncTransfer, shellQuote } = require('../../src/sync/rsync')
 module.exports = {
   command: 'push <target> [-y]',
   describe: 'Push database to a target environment',
-  builder: {
-    target: {
-      demandOption: true
-    },
-    y: {
-      describe: 'Skip confirmation prompt',
-      type: 'boolean'
-    }
-  },
+  builder: (yargs) => yargs
+    .positional('target', {
+      type: 'string',
+      describe: 'Environment to push to (e.g. staging, live)'
+    })
+    .option('y', {
+      type: 'boolean',
+      describe: 'Skip confirmation prompt'
+    }),
   handler: async (argv) => {
     const project = argv.project
     const env = getEnvironment(project, argv.target)

@@ -7,38 +7,39 @@ const { FILE_DIFF_OPTIONS, buildTransferSubpaths, runReadOnlyDiff } = require('.
 module.exports = {
   command: 'push <target> [item] [name]',
   describe: 'Push files to an environment. Use item shortcuts (themes/plugins/uploads) or --path for any directory.',
-  builder: {
-    target: {
-      demandOption: true
-    },
-    item: {
+  builder: (yargs) => yargs
+    .positional('target', {
+      type: 'string',
+      describe: 'Environment to push to (e.g. staging, live)'
+    })
+    .positional('item', {
+      describe: 'What to push',
       default: 'uploads',
       choices: ['themes', 'plugins', 'uploads', 'all']
-    },
-    name: {
+    })
+    .positional('name', {
       type: 'string',
       describe: 'Push a single theme or plugin by name'
-    },
-    path: {
+    })
+    .option('path', {
       type: 'string',
       describe: 'Push an arbitrary directory path (relative to WP root)'
-    },
-    'dry-run': {
+    })
+    .option('dry-run', {
       type: 'boolean',
       describe: 'Preview changes without transferring',
       default: false
-    },
-    ...FILE_DIFF_OPTIONS,
-    y: {
+    })
+    .options(FILE_DIFF_OPTIONS)
+    .option('y', {
       type: 'boolean',
       describe: 'Skip confirmation prompts'
-    },
-    'no-backup': {
+    })
+    .option('no-backup', {
       type: 'boolean',
       describe: 'Skip pre-push backup',
       default: false
-    }
-  },
+    }),
   handler: async (argv) => {
     const project = argv.project
     const env = getEnvironment(project, argv.target)

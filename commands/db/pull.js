@@ -7,11 +7,11 @@ const { RsyncTransfer, shellQuote } = require('../../src/sync/rsync')
 module.exports = {
   command: 'pull <target>',
   describe: 'Pull database from a target environment',
-  builder: {
-    target: {
-      demandOption: true
-    }
-  },
+  builder: (yargs) => yargs
+    .positional('target', {
+      type: 'string',
+      describe: 'Environment to pull from (e.g. staging, live)'
+    }),
   handler: async (argv) => {
     const project = argv.project
     const env = getEnvironment(project, argv.target)

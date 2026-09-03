@@ -44,14 +44,16 @@ function processCSV (wpCommand, filePath) {
 module.exports = {
   command: 'plugin-install <target> [csv]',
   describe: 'Install and activate plugins on a server from a CSV file',
-  builder: {
-    server: {
-    },
-    csv: {
-      default: 'plugins.csv',
-      require: false
-    }
-  },
+  builder: (yargs) => yargs
+    .positional('target', {
+      type: 'string',
+      describe: 'Environment to install plugins on (e.g. staging, live)'
+    })
+    .positional('csv', {
+      type: 'string',
+      describe: 'Path to the plugin CSV file',
+      default: 'plugins.csv'
+    }),
   handler: (argv) => {
     const wpCommand = argv.project.wpCli || 'wp'
     processCSV(wpCommand, argv.csv)
