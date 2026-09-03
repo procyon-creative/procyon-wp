@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const { prompt } = require('enquirer')
 const { saveProject, getProjectFromCwd } = require('../src/config/store')
+const { confirmProjectName } = require('../src/config/collisions')
 
 module.exports = {
   command: 'init',
@@ -136,6 +137,11 @@ module.exports = {
 
     if (localDomain) {
       config.localDomain = localDomain
+    }
+
+    if (!await confirmProjectName(projectName, config.projectPath, argv.y)) {
+      console.log('Setup cancelled.')
+      return
     }
 
     const configPath = saveProject(projectName, config)

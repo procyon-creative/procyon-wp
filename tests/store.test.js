@@ -183,4 +183,24 @@ describe('config store', () => {
     })
   })
 
+  describe('findProjectConflicts', () => {
+    it('reports a name conflict when the name is taken by another directory', () => {
+      store.saveProject('test-site', validConfig)
+      const conflicts = store.findProjectConflicts('test-site', '/Users/test/Sites/other')
+      expect(conflicts.name).toMatchObject({ projectPath: validConfig.projectPath })
+    })
+
+    it('reports a path conflict when another project already claims the directory', () => {
+      store.saveProject('test-site', validConfig)
+      const conflicts = store.findProjectConflicts('other-name', validConfig.projectPath)
+      expect(conflicts.path).toMatchObject({ name: 'test-site' })
+    })
+
+    it('reports no conflict when re-saving the same project', () => {
+      store.saveProject('test-site', validConfig)
+      const conflicts = store.findProjectConflicts('test-site', validConfig.projectPath)
+      expect(conflicts).toEqual({ name: null, path: null })
+    })
+  })
+
 })
