@@ -10,40 +10,42 @@ const MU_PLUGINS_PATH = 'wp-content/mu-plugins'
 module.exports = {
   command: 'sync <target>',
   describe: 'Compare local and remote plugins, then selectively sync.',
-  builder: {
-    target: {
-      demandOption: true
-    },
-    prefer: {
+  builder: (yargs) => yargs
+    .positional('target', {
       type: 'string',
-      choices: ['local', 'remote'],
-      default: 'remote',
-      describe: 'Preferred sync direction'
-    },
-    'missing-only': {
-      type: 'boolean',
-      default: false,
-      describe: 'Only sync plugins missing on one side'
-    },
-    'skip-mu': {
-      type: 'boolean',
-      default: true,
-      describe: 'Skip mu-plugins directory'
-    },
-    'rsync-exclude': {
-      type: 'string',
-      describe: 'Exclude patterns: path to file or comma-separated patterns'
-    },
-    'dry-run': {
-      type: 'boolean',
-      default: false,
-      describe: 'Preview changes without transferring'
-    },
-    y: {
-      type: 'boolean',
-      describe: 'Skip confirmation prompt, sync all'
-    }
-  },
+      describe: 'Environment to compare against (e.g. staging, live)'
+    })
+    .options({
+      prefer: {
+        type: 'string',
+        choices: ['local', 'remote'],
+        default: 'remote',
+        describe: 'Preferred sync direction'
+      },
+      'missing-only': {
+        type: 'boolean',
+        default: false,
+        describe: 'Only sync plugins missing on one side'
+      },
+      'skip-mu': {
+        type: 'boolean',
+        default: true,
+        describe: 'Skip mu-plugins directory'
+      },
+      'rsync-exclude': {
+        type: 'string',
+        describe: 'Exclude patterns: path to file or comma-separated patterns'
+      },
+      'dry-run': {
+        type: 'boolean',
+        default: false,
+        describe: 'Preview changes without transferring'
+      },
+      y: {
+        type: 'boolean',
+        describe: 'Skip confirmation prompt, sync all'
+      }
+    }),
   handler: async (argv) => {
     const project = argv.project
     const env = getEnvironment(project, argv.target)

@@ -6,28 +6,28 @@ const { prompt } = require('enquirer')
 module.exports = {
   command: 'rollback <target> <item>',
   describe: 'Rollback a previous push from a backup.',
-  builder: {
-    target: {
-      demandOption: true
-    },
-    item: {
-      demandOption: true,
+  builder: (yargs) => yargs
+    .positional('target', {
+      type: 'string',
+      describe: 'Environment the push was made to (e.g. staging, live)'
+    })
+    .positional('item', {
+      describe: 'What to restore',
       choices: ['themes', 'plugins', 'uploads']
-    },
-    list: {
+    })
+    .option('list', {
       type: 'boolean',
       describe: 'List available backups',
       default: false
-    },
-    to: {
+    })
+    .option('to', {
       type: 'string',
       describe: 'Timestamp of the backup to restore'
-    },
-    y: {
+    })
+    .option('y', {
       type: 'boolean',
       describe: 'Skip confirmation prompt'
-    }
-  },
+    }),
   handler: async (argv) => {
     const project = argv.project
     const env = getEnvironment(project, argv.target)

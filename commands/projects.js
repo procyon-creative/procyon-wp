@@ -4,20 +4,20 @@ const { listProjects, removeProject, getProjectFromCwd } = require('../src/confi
 module.exports = {
   command: 'projects [action]',
   describe: 'List and manage registered projects',
-  builder: {
-    action: {
+  builder: (yargs) => yargs
+    .positional('action', {
+      describe: 'Action to perform',
       choices: ['list', 'show', 'remove'],
       default: 'list'
-    },
-    name: {
+    })
+    .option('name', {
       type: 'string',
       describe: 'Project name (for remove)'
-    },
-    y: {
+    })
+    .option('y', {
       type: 'boolean',
       describe: 'Skip confirmation prompt'
-    }
-  },
+    }),
   handler: async (argv) => {
     if (argv.action === 'list') {
       const projects = listProjects()

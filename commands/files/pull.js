@@ -5,29 +5,30 @@ const { FILE_DIFF_OPTIONS, buildTransferSubpaths, runReadOnlyDiff } = require('.
 module.exports = {
   command: 'pull <target> [item] [name]',
   describe: 'Pull files from an environment. Use item shortcuts (themes/plugins/uploads) or --path for any directory.',
-  builder: {
-    target: {
-      demandOption: true
-    },
-    item: {
+  builder: (yargs) => yargs
+    .positional('target', {
+      type: 'string',
+      describe: 'Environment to pull from (e.g. staging, live)'
+    })
+    .positional('item', {
+      describe: 'What to pull',
       default: 'uploads',
       choices: ['themes', 'plugins', 'uploads', 'all']
-    },
-    name: {
+    })
+    .positional('name', {
       type: 'string',
       describe: 'Pull a single theme or plugin by name'
-    },
-    path: {
+    })
+    .option('path', {
       type: 'string',
       describe: 'Pull an arbitrary directory path (relative to WP root)'
-    },
-    'dry-run': {
+    })
+    .option('dry-run', {
       type: 'boolean',
       describe: 'Preview changes without transferring',
       default: false
-    },
-    ...FILE_DIFF_OPTIONS
-  },
+    })
+    .options(FILE_DIFF_OPTIONS),
   handler: async (argv) => {
     const project = argv.project
     const env = getEnvironment(project, argv.target)
