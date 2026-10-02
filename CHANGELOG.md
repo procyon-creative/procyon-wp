@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/procyon-creative/procyon-wp/compare/v1.1.1...v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **config:** default the local WordPress path to the Lando webroot ([#27](https://github.com/procyon-creative/procyon-wp/issues/27)) ([785b09e](https://github.com/procyon-creative/procyon-wp/commit/785b09e6b5112bbcaac58d519c5d533671b2df88))
+* **env:** pre-fill env add prompts from an existing environment ([#25](https://github.com/procyon-creative/procyon-wp/issues/25)) ([25b3e6f](https://github.com/procyon-creative/procyon-wp/commit/25b3e6fa352c140b772b550304f87f11c3ad3ade))
+
 ## [1.1.1](https://github.com/procyon-creative/procyon-wp/compare/v1.1.0...v1.1.1) (2026-09-03)
 
 
