@@ -3,6 +3,7 @@ const path = require('path')
 const { prompt } = require('enquirer')
 const { saveProject } = require('../src/config/store')
 const { confirmProjectName } = require('../src/config/collisions')
+const { LocalPathDefault } = require('../src/config/local-path-default')
 const { lookupSshHost } = require('../src/ssh-config')
 
 module.exports = {
@@ -61,14 +62,15 @@ module.exports = {
 
     let localPath = envConfig.LOCAL_PATH
     if (!localPath) {
+      const defaultLocalPath = new LocalPathDefault(process.cwd()).resolve()
       if (argv.y) {
-        localPath = process.cwd()
+        localPath = defaultLocalPath
       } else {
         const answer = await prompt({
           type: 'input',
           name: 'localPath',
           message: 'LOCAL_PATH not found in .env. Enter local WordPress path:',
-          initial: process.cwd()
+          initial: defaultLocalPath
         })
         localPath = answer.localPath
       }
