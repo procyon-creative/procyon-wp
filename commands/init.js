@@ -3,6 +3,7 @@ const path = require('path')
 const { prompt } = require('enquirer')
 const { saveProject, getProjectFromCwd } = require('../src/config/store')
 const { confirmProjectName } = require('../src/config/collisions')
+const { LocalPathDefault } = require('../src/config/local-path-default')
 
 module.exports = {
   command: 'init',
@@ -37,7 +38,7 @@ module.exports = {
       type: 'input',
       name: 'localPath',
       message: 'Local WordPress path:',
-      initial: process.cwd()
+      initial: new LocalPathDefault(process.cwd()).resolve()
     })
 
     const { localDomain } = await prompt({
